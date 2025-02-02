@@ -1,6 +1,7 @@
 # go-forward
 
 A Go library providing a clean, consistent API for network traffic forwarding, supporting both stream (TCP-like) and packet (UDP-like) connections with minimal boilerplate.
+Factored out from sam-forwarder to be used in go-i2ptunnel.
 
 ## Core Features
 
