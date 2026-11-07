@@ -2,6 +2,7 @@ package stream
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"sync"
@@ -43,7 +44,13 @@ func Forward(ctx context.Context, conn1, conn2 net.Conn, cfg *config.ForwardConf
 	return nil
 }
 
-func copyStream(ctx context.Context, dst, src net.Conn, cfg *config.ForwardConfig, label string) error {
+func copyStream(ctx context.Context, dst, src net.Conn, cfg *config.ForwardConfig, label string) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("stream forwarding panic: %v", r)
+		}
+	}()
+
 	buffer := make([]byte, cfg.BufferSize)
 	var m *metrics.StreamMetrics
 
@@ -69,6 +76,9 @@ func copyStream(ctx context.Context, dst, src net.Conn, cfg *config.ForwardConfi
 		n, err := src.Read(buffer)
 		if err != nil {
 			return err
+		}
+		if n < 0 || n > len(buffer) {
+			return fmt.Errorf("invalid read count %d for buffer of length %d", n, len(buffer))
 		}
 
 		if cfg.EnableMetrics {
